@@ -1,0 +1,963 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>「行政長官施政報告」查詢系統</title>
+    <!-- Awesome Icon -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" />
+    <style>
+        .element-hidden {
+            display: none !important;
+        }
+        /* Reset & Base */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            background: linear-gradient(135deg, #1a472a 0%, #2e8b57 100%);
+            min-height: 100vh;
+            padding: 16px;
+            color: #1f2937;
+        }
+        /* Layout */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            min-height: 100vh;
+        }
+        /* Header */
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 20px;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .header h1 {
+            color: #111827;
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, #1a472a 0%, #2e8b57 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-align: center;
+        }
+        .header .subtitle {
+            color: #6b7280;
+            font-size: 1rem;
+            line-height: 1.5;
+            text-align: center;
+        }
+        /* Form Section */
+        .form-section {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 16px;
+            padding: 25px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        .form-group label {
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #374151;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .form-group label i {
+            color: #2e8b57;
+        }
+        .form-control {
+            padding: 12px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.2s ease;
+            background: white;
+        }
+        .form-control:focus {
+            outline: none;
+            border-color: #2e8b57;
+            box-shadow: 0 0 0 3px rgba(46, 139, 87, 0.1);
+        }
+        .year-input {
+            max-width: 200px;
+        }
+        .form-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin-top: 10px;
+        }
+        .btn {
+            padding: 12px 28px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #2e8b57 0%, #1a472a 100%);
+            color: white;
+        }
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #228b22 0%, #14532d 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(46, 139, 87, 0.3);
+        }
+        .btn-secondary {
+            background: #f3f4f6;
+            color: #374151;
+            border: 1px solid #d1d5db;
+        }
+        .btn-secondary:hover {
+            background: #e5e7eb;
+            transform: translateY(-2px);
+        }
+        /* Main Content */
+        .main-content {
+            display: flex;
+            flex: 1;
+            gap: 20px;
+            height: 600px;
+        }
+        .data-section {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            overflow-y: auto;
+            min-height: 0;
+        }
+        /* Data Section Styles */
+        .data-header {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .data-header h2 {
+            color: #111827;
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, #1a472a 0%, #2e8b57 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .data-header .subtitle {
+            color: #6b7280;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+        .data-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 20px;
+            border: 1px solid #e5e7eb;
+        }
+        .stat-item {
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #2e8b57;
+            display: block;
+        }
+        .stat-label {
+            font-size: 0.8rem;
+            color: #6b7280;
+        }
+        .accordion-container {
+            margin-top: 20px;
+        }
+        .policy-group {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            overflow: hidden;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .policy-group:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        .dataset-header {
+            background: linear-gradient(135deg, #2e8b57 0%, #1a472a 100%);
+            color: white;
+            padding: 12px 15px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+        }
+        .dataset-header.active {
+            background: linear-gradient(135deg, #1a472a 0%, #0f2f1a 100%);
+        }
+        .dataset-header i {
+            transition: transform 0.3s ease;
+        }
+        .dataset-header.collapsed i {
+            transform: rotate(-90deg);
+        }
+        .dataset-content {
+            padding: 0;
+            background: white;
+        }
+        .policy-item {
+            border-bottom: 1px solid #e5e7eb;
+            padding: 15px;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+        .policy-item:last-child {
+            border-bottom: none;
+        }
+        .policy-item:hover {
+            background-color: #f8fafc;
+        }
+        .policy-item.active {
+            background-color: #f0fdf4;
+            border-left: 4px solid #2e8b57;
+        }
+        .policy-title {
+            font-weight: 600;
+            color: #111827;
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .policy-content {
+            color: #4b5563;
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+        .policy-highlights {
+            margin-top: 10px;
+            padding-left: 20px;
+        }
+        .highlight-item {
+            margin-bottom: 8px;
+            padding-left: 5px;
+            position: relative;
+        }
+        .highlight-item::before {
+            content: "•";
+            color: #2e8b57;
+            font-weight: bold;
+            position: absolute;
+            left: -15px;
+        }
+        .policy-details {
+            background: #f8fafc;
+            border-top: 1px solid #e5e7eb;
+            padding: 15px;
+            margin-top: 10px;
+            border-radius: 0 0 8px 8px;
+        }
+        .detail-row {
+            display: flex;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #f3f4f6;
+        }
+        .detail-label {
+            font-weight: 600;
+            color: #374151;
+            width: 150px;
+            flex-shrink: 0;
+        }
+        .detail-value {
+            flex: 1;
+            color: #6b7280;
+            word-break: break-word;
+        }
+        .no-data {
+            text-align: center;
+            padding: 40px 20px;
+            color: #9ca3af;
+        }
+        .no-data i {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            opacity: 0.5;
+        }
+        .loading {
+            text-align: center;
+            padding: 40px 20px;
+            color: #6b7280;
+        }
+        .loading-spinner {
+            border: 3px solid #f3f4f6;
+            border-top: 3px solid #2e8b57;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+        /* Footer */
+        .footer {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 0.875rem;
+            padding: 20px;
+            margin-top: auto;
+        }
+        /* Notification */
+        .notification {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 12px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 3000;
+            animation: slideIn 0.3s ease-out;
+        }
+        .notification.success {
+            background-color: #10b981;
+            color: white;
+        }
+        .notification.error {
+            background-color: #ef4444;
+            color: white;
+        }
+        .notification.info {
+            background-color: #2e8b57;
+            color: white;
+        }
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        @keyframes slideOut {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+        }
+        /* Mobile Optimizations */
+        @media (max-width: 768px) {
+            body {
+                padding: 12px;
+                background: #1a472a;
+            }
+            .container {
+                gap: 16px;
+            }
+            .header {
+                padding: 16px;
+                border-radius: 12px;
+            }
+            .header h1 {
+                font-size: 1.5rem;
+            }
+            .form-grid {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+            .form-section {
+                padding: 20px;
+            }
+            .main-content {
+                flex-direction: column;
+                height: auto;
+            }
+            .data-section {
+                max-height: 400px;
+                min-height: 400px;
+                padding: 15px;
+            }
+            .data-header h2 {
+                font-size: 1.3rem;
+            }
+            .stat-value {
+                font-size: 1.5rem;
+            }
+            .detail-row {
+                flex-direction: column;
+                margin-bottom: 12px;
+            }
+            .detail-label {
+                width: 100%;
+                margin-bottom: 5px;
+            }
+            .dataset-header {
+                padding: 10px 12px;
+                font-size: 0.9rem;
+            }
+            .btn {
+                padding: 10px 20px;
+                font-size: 0.9rem;
+            }
+        }
+        /* Desktop Enhancements */
+        @media (min-width: 1200px) {
+            .data-section {
+                max-height: 65vh;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>「行政長官施政報告」<br/>查詢系統</h1>
+            <p class="subtitle">資訊來源：行政長官辦公室</p>
+        </header>
+        <section class="form-section">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="reportYear">
+                        <i class="fas fa-calendar-alt"></i>
+                        選擇年份
+                    </label>
+                    <input type="number" 
+                           id="reportYear" 
+                           class="form-control year-input" 
+                           placeholder="輸入年份 (如: 2025)"
+                           min="1997"
+                           max="2099"
+                           value="2025">
+                </div>
+            </div>
+            <div class="form-actions">
+                <button type="button" class="btn btn-primary" onclick="loadPolicyAddress()">
+                    <i class="fas fa-download"></i>
+                    載入施政報告
+                </button>
+                <button type="button" class="btn btn-secondary" onclick="resetForm()">
+                    <i class="fas fa-redo"></i>
+                    重置
+                </button>
+            </div>
+        </section>
+        <main class="main-content">
+            <section class="data-section">
+                <div class="data-header">
+                    <h2>施政報告重點內容</h2>
+                    <p class="subtitle">點擊政策項目查看更多詳細資訊</p>
+                </div>
+                <div class="data-stats">
+                    <div class="stat-item">
+                        <span id="total-sections" class="stat-value">0</span>
+                        <span class="stat-label">主要章節</span>
+                    </div>
+                    <div class="stat-item">
+                        <span id="total-policies" class="stat-value">0</span>
+                        <span class="stat-label">政策項目</span>
+                    </div>
+                    <div class="stat-item">
+                        <span id="current-year" class="stat-value">-</span>
+                        <span class="stat-label">報告年份</span>
+                    </div>
+                </div>
+                <div class="accordion-container" id="accordion-container">
+                    <div class="no-data">
+                        <i class="fas fa-file-alt"></i>
+                        <p>請選擇年份並點擊「載入施政報告」按鈕開始查詢</p>
+                    </div>
+                </div>
+            </section>
+        </main>
+        <footer class="footer">
+            <p>「行政長官施政報告」查詢系統<br/>資料來源: 行政長官辦公室</p>
+        </footer>
+    </div>
+    <script>
+        const PROXY_URL = 'https://cors-anywhere.herokuapp.com';
+        // IndexedDB 配置
+        const DB_NAME = 'policy-address-db';
+        const DB_VERSION = 1;
+        const STORE_NAME = 'policy-address';
+        // 全局變量
+        let policyData = [];
+        let currentYear = null;
+        let db;
+        // 初始化應用
+        document.addEventListener('DOMContentLoaded', function () {
+            initIndexedDB();
+            // 為年份輸入框添加 Enter 鍵支援
+            document.getElementById('reportYear').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    loadPolicyAddress();
+                }
+            });
+            // 設置默認年份為當前年份
+            const currentYear = new Date().getFullYear();
+            document.getElementById('reportYear').value = currentYear;
+        });
+        // 初始化 IndexedDB
+        function initIndexedDB() {
+            const request = indexedDB.open(DB_NAME, DB_VERSION);
+            request.onerror = function(event) {
+                console.error('IndexedDB 初始化失敗:', event.target.error);
+                showNotification('瀏覽器資料庫初始化失敗，將使用在線資料', 'error');
+            };
+            request.onsuccess = function(event) {
+                db = event.target.result;
+                console.log('IndexedDB 初始化成功');
+            };
+            request.onupgradeneeded = function(event) {
+                const db = event.target.result;
+                if (!db.objectStoreNames.contains(STORE_NAME)) {
+                    const store = db.createObjectStore(STORE_NAME, { keyPath: 'id' });
+                    store.createIndex('year', 'year', { unique: false });
+                    store.createIndex('title', 'title', { unique: false });
+                    store.createIndex('timestamp', 'timestamp', { unique: false });
+                }
+            };
+        }
+        // 載入施政報告
+        async function loadPolicyAddress() {
+            const yearInput = document.getElementById('reportYear');
+            const year = parseInt(yearInput.value.trim());
+            
+            if (isNaN(year) || year < 1997 || year > 2099) {
+                showNotification('請輸入有效的年份 (1997-2099)', 'error');
+                return;
+            }
+            
+            currentYear = year;
+            const container = document.getElementById('accordion-container');
+            container.innerHTML = `
+                <div class="loading">
+                    <div class="loading-spinner"></div>
+                    <p>正在載入 ${year} 年施政報告資料...</p>
+                </div>
+            `;
+            // 先嘗試從 IndexedDB 載入
+            if (db) {
+                const cachedData = await getFromIndexedDB(year);
+                if (cachedData) {
+                    policyData = cachedData.data;
+                    updateStatistics();
+                    updatePolicyList();
+                    showNotification(`已從本地緩存載入 ${year} 年施政報告`, 'success');
+                    return;
+                }
+            }
+            // 從 API 載入資料
+            await loadDataFromAPI(year);
+        }
+        // 從 IndexedDB 獲取資料
+        function getFromIndexedDB(year) {
+            return new Promise((resolve, reject) => {
+                if (!db) {
+                    resolve(null);
+                    return;
+                }
+                const transaction = db.transaction([STORE_NAME], 'readonly');
+                const store = transaction.objectStore(STORE_NAME);
+                const index = store.index('year');
+                const request = index.get(year);
+                request.onsuccess = function(event) {
+                    resolve(event.target.result);
+                };
+                request.onerror = function(event) {
+                    reject(event.target.error);
+                };
+            });
+        }
+        // 從 API 載入資料
+        async function loadDataFromAPI(year) {
+            const url = `${PROXY_URL}/https://www.ceo.gov.hk/public/open-data/tc/policy_address/pa${year}_highlights.xml`;
+            try {
+                const response = await fetch(url);
+                if (!response.ok) {
+                    document.getElementById('accordion-container').innerHTML = `
+                        <div class="no-data">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <p>無法載入 ${year} 年施政報告</p>
+                            <p style="font-size: 0.9rem; margin-top: 10px;">請確認年份是否正確或稍後再試</p>
+                        </div>
+                    `;
+                    showNotification(`無法載入 ${year} 年施政報告`, 'error');
+                    return;
+                }
+                const xmlText = await response.text();
+                const parser = new DOMParser();
+                const xmlDoc = parser.parseFromString(xmlText, 'text/xml');
+                policyData = parseXMLData(xmlDoc, year);
+                // 儲存到 IndexedDB
+                saveToIndexedDB(year, policyData);
+                updateStatistics();
+                updatePolicyList();
+                showNotification(`成功載入 ${year} 年施政報告`, 'success');
+            } catch (error) {
+                console.error('載入資料時出錯:', error);
+                document.getElementById('accordion-container').innerHTML = `
+                    <div class="no-data">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <p>載入資料時出錯</p>
+                        <p style="font-size: 0.9rem; margin-top: 10px;">請檢查網絡連接或稍後再試</p>
+                    </div>
+                `;
+                showNotification('載入資料時出錯，請稍後再試', 'error');
+            }
+        }
+        // 解析 XML 資料
+        function parseXMLData(xmlDoc, year) {
+            const data = [];
+            const sections = xmlDoc.querySelectorAll('section[title]');
+            const reportTitle = xmlDoc.querySelector('title')?.textContent || `${year}年施政報告`;
+            if (sections.length === 0) {
+                // 如果沒有 section，嘗試其他格式
+                const allSections = xmlDoc.querySelectorAll('section');
+                allSections.forEach((section, index) => {
+                    const title = section.querySelector('title')?.textContent || `第${index + 1}章`;
+                    const contentItems = section.querySelectorAll('para, listitem');
+                    const highlights = [];
+                    contentItems.forEach(item => {
+                        const text = item.textContent.trim();
+                        if (text) highlights.push(text);
+                    });
+                    if (title && highlights.length > 0) {
+                        data.push({
+                            id: `section-${index}`,
+                            type: 'section',
+                            title: title,
+                            highlights: highlights,
+                            year: year,
+                            reportTitle: reportTitle
+                        });
+                    }
+                });
+            } else {
+                sections.forEach((section, sectionIndex) => {
+                    const title = section.getAttribute('title') || section.querySelector('title')?.textContent || `第${sectionIndex + 1}章`;
+                    const subsections = section.querySelectorAll('section[title]');
+                    if (subsections.length > 0) {
+                        // 有子章節
+                        subsections.forEach((subsection, subIndex) => {
+                            const subTitle = subsection.getAttribute('title') || subsection.querySelector('title')?.textContent || `子章節${subIndex + 1}`;
+                            const highlights = extractHighlights(subsection);
+                            if (highlights.length > 0) {
+                                data.push({
+                                    id: `section-${sectionIndex}-${subIndex}`,
+                                    type: 'subsection',
+                                    sectionTitle: title,
+                                    title: subTitle,
+                                    highlights: highlights,
+                                    year: year,
+                                    reportTitle: reportTitle
+                                });
+                            }
+                        });
+                    } else {
+                        // 沒有子章節，直接提取重點
+                        const highlights = extractHighlights(section);
+                        if (highlights.length > 0) {
+                            data.push({
+                                id: `section-${sectionIndex}`,
+                                type: 'section',
+                                title: title,
+                                highlights: highlights,
+                                year: year,
+                                reportTitle: reportTitle
+                            });
+                        }
+                    }
+                });
+            }
+            return data;
+        }
+        // 提取重點內容
+        function extractHighlights(element) {
+            const highlights = [];
+            // 提取 para 內容
+            const paras = element.querySelectorAll('para');
+            paras.forEach(para => {
+                const text = para.textContent.trim();
+                if (text && !text.includes('<?xml')) {
+                    highlights.push(text);
+                }
+            });
+            // 提取 listitem 內容
+            const listItems = element.querySelectorAll('listitem');
+            listItems.forEach(item => {
+                const text = item.textContent.trim();
+                if (text) {
+                    highlights.push(text);
+                }
+            });
+            return highlights;
+        }
+        // 儲存到 IndexedDB
+        function saveToIndexedDB(year, data) {
+            if (!db) return;
+            const transaction = db.transaction([STORE_NAME], 'readwrite');
+            const store = transaction.objectStore(STORE_NAME);
+            const record = {
+                id: `pa-${year}`,
+                year: year,
+                data: data,
+                timestamp: new Date().toISOString(),
+                title: `${year}年施政報告`
+            };
+            store.put(record);
+            transaction.oncomplete = function() {
+                console.log('施政報告資料已儲存到 IndexedDB');
+            };
+            transaction.onerror = function(event) {
+                console.error('儲存到 IndexedDB 失敗:', event.target.error);
+            };
+        }
+        // 重置表單
+        function resetForm() {
+            document.getElementById('reportYear').value = new Date().getFullYear();
+            policyData = [];
+            updateStatistics();
+            document.getElementById('accordion-container').innerHTML = `
+                <div class="no-data">
+                    <i class="fas fa-file-alt"></i>
+                    <p>請選擇年份並點擊「載入施政報告」按鈕開始查詢</p>
+                </div>
+            `;
+            showNotification('已重置查詢條件', 'info');
+        }
+        // 更新統計數據
+        function updateStatistics() {
+            const totalSections = [...new Set(policyData.map(item => 
+                item.type === 'subsection' ? item.sectionTitle : item.title
+            ))].length;
+            const totalPolicies = policyData.length;
+            document.getElementById('total-sections').textContent = totalSections;
+            document.getElementById('total-policies').textContent = totalPolicies;
+            document.getElementById('current-year').textContent = currentYear || '-';
+        }
+        // 更新政策列表
+        function updatePolicyList() {
+            const container = document.getElementById('accordion-container');
+            if (policyData.length === 0) {
+                container.innerHTML = `
+                    <div class="no-data">
+                        <i class="fas fa-file-alt"></i>
+                        <p>沒有找到施政報告資料</p>
+                        <p style="font-size: 0.9rem; margin-top: 10px;">請確認年份是否正確或稍後再試</p>
+                    </div>
+                `;
+                return;
+            }
+            // 按章節分組
+            const groupedData = {};
+            policyData.forEach(policy => {
+                let groupKey;
+                if (policy.type === 'subsection') {
+                    groupKey = policy.sectionTitle;
+                } else {
+                    groupKey = policy.title;
+                }
+                if (!groupedData[groupKey]) {
+                    groupedData[groupKey] = [];
+                }
+                groupedData[groupKey].push(policy);
+            });
+            let accordionHTML = '';
+            Object.keys(groupedData).forEach((groupTitle, groupIndex) => {
+                const groupItems = groupedData[groupTitle];
+                accordionHTML += `
+                    <div class="policy-group">
+                        <div class="dataset-header" onclick="togglePolicyGroup(${groupIndex})">
+                            <div>
+                                <i class="fas fa-folder" style="margin-right: 8px;"></i>
+                                <span>${groupTitle} (${groupItems.length})</span>
+                            </div>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div id="policy-group-${groupIndex}" class="dataset-content" style="display: block;">
+                `;
+                groupItems.forEach((policy, index) => {
+                    const isActive = false; // 初始都不激活
+                    accordionHTML += `
+                        <div class="policy-item ${isActive ? 'active' : ''}"
+                             onclick="selectPolicy('${policy.id}')"
+                             data-id="${policy.id}">
+                            <div class="policy-title">
+                                <i class="fas fa-bullseye"></i>
+                                ${policy.title}
+                            </div>
+                            <div class="policy-content">
+                                <div class="policy-highlights">
+                                    ${policy.highlights.slice(0, 3).map(highlight => 
+                                        `<div class="highlight-item">${highlight}</div>`
+                                    ).join('')}
+                                    ${policy.highlights.length > 3 ? 
+                                        `<div style="color: #6b7280; font-style: italic; margin-top: 5px;">...還有 ${policy.highlights.length - 3} 項重點</div>` : 
+                                        ''}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                accordionHTML += `
+                        </div>
+                    </div>
+                `;
+            });
+            container.innerHTML = accordionHTML;
+        }
+        // 切換政策群組
+        function togglePolicyGroup(index) {
+            const content = document.getElementById(`policy-group-${index}`);
+            const header = content.previousElementSibling;
+            const icon = header.querySelector('.fa-chevron-down, .fa-chevron-up');
+            if (content.style.display === 'none') {
+                content.style.display = 'block';
+                header.classList.add('active');
+                if (icon) icon.className = 'fas fa-chevron-up';
+            } else {
+                content.style.display = 'none';
+                header.classList.remove('active');
+                if (icon) icon.className = 'fas fa-chevron-down';
+            }
+        }
+        // 選擇政策項目
+        function selectPolicy(policyId) {
+            const policy = policyData.find(p => p.id === policyId);
+            if (!policy) return;
+            // 移除所有活躍狀態
+            document.querySelectorAll('.policy-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            // 添加當前活躍狀態
+            const item = document.querySelector(`.policy-item[data-id="${policyId}"]`);
+            if (item) {
+                item.classList.add('active');
+                // 如果沒有詳細資訊，則添加
+                if (!item.querySelector('.policy-details')) {
+                    const details = generatePolicyDetails(policy);
+                    item.insertAdjacentHTML('beforeend', details);
+                }
+                // 滾動到選中的項目
+                item.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+        }
+        // 生成政策詳細資訊
+        function generatePolicyDetails(policy) {
+            return `
+                <div class="policy-details">
+                    <div class="detail-row">
+                        <div class="detail-label">所屬章節:</div>
+                        <div class="detail-value">${policy.type === 'subsection' ? policy.sectionTitle : policy.title}</div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">政策標題:</div>
+                        <div class="detail-value">${policy.title}</div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">報告年份:</div>
+                        <div class="detail-value">${policy.year}年</div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">政策重點:</div>
+                        <div class="detail-value">
+                            <div class="policy-highlights" style="padding-left: 0;">
+                                ${policy.highlights.map((highlight, index) => 
+                                    `<div class="highlight-item">${index + 1}. ${highlight}</div>`
+                                ).join('')}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="detail-row">
+                        <div class="detail-label">資料來源:</div>
+                        <div class="detail-value">
+                            <a href="https://www.ceo.gov.hk/tc/policy-address/index.html" target="_blank" style="color: #2e8b57;">
+                                行政長官辦公室 - 施政報告
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        // 顯示通知
+        function showNotification(message, type = 'info') {
+            // 移除現有通知
+            const existingNotification = document.querySelector('.notification');
+            if (existingNotification) {
+                existingNotification.remove();
+            }
+            // 創建通知元素
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.innerHTML = `
+                <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
+                <span>${message}</span>
+            `;
+            // 添加到文檔
+            document.body.appendChild(notification);
+            // 3秒後移除
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.3s ease-out';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+        // 初始化教程
+        if (!localStorage.getItem('policyTutorialShown')) {
+            setTimeout(() => {
+                alert("歡迎使用「行政長官施政報告」查詢系統！\n\n• 輸入年份 (如：2025) 並點擊「載入施政報告」按鈕\n• 點擊章節標題可展開/收起該章節內容\n• 點擊政策項目可查看詳細重點內容\n• 資料會自動緩存在瀏覽器中，下次查詢同一年份無需重新下載");
+                localStorage.setItem('policyTutorialShown', 'true');
+            }, 1000);
+        }
+    </script>
+</body>
+</html>
