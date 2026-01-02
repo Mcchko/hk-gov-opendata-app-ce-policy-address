@@ -620,9 +620,9 @@
         }
         // 從 API 載入資料
         async function loadDataFromAPI(year) {
-            const url = `${PROXY_URL}/https://www.ceo.gov.hk/public/open-data/tc/policy_address/pa${year}_highlights.xml`;
+            const url = `https://www.ceo.gov.hk/public/open-data/tc/policy_address/pa${year}_highlights.xml`;
             try {
-                const response = await fetch(url);
+                const response = await fetch(`${PROXY_URL}/${url}`);
                 if (!response.ok) {
                     document.getElementById('accordion-container').innerHTML = `
                         <div class="no-data">
